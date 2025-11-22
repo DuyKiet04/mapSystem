@@ -21,9 +21,9 @@ Xây dựng hệ thống quản lý đa cấu hình bản đồ, cho phép tạo
 
 ## Link Demo (Netlify)
 
-- **Trang cấu hình bản đồ:** [đang cập nhật](https://mapadmin.netlify.app/admin)
-- **Quản lý thumbnail:** [đang cập nhật](https://mapadmin.netlify.app/api/config)
-- **API** [đang cập nhật](https://mapadmin.netlify.app/api/config)
+- **Trang cấu hình bản đồ:** [https://mapsystem.netlify.app/admin](https://mapsystem.netlify.app/admin)
+- **Quản lý thumbnail:** [https://mapsystem.netlify.app/admin/thumbnails](https://mapsystem.netlify.app/admin/thumbnails)
+- **API** [https://mapsystem.netlify.app/api/config/hcm](https://mapsystem.netlify.app/api/config/hcm)
 
 ---
 
