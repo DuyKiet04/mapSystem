@@ -9,6 +9,7 @@
 	let editorInstance: any;
     let defaultConfig = {
         title: "Bản đồ mới",
+		logoUrl: "https://svelte.dev/favicon.png",
         zoom: 13,
         center: [10.7769, 106.7009],
         baseLayers: [],
@@ -50,8 +51,8 @@
 		title: "Cấu Hình Bản Đồ",
 		type: "object",
 		properties: {
-			title: { type: "string", title: "Tiêu đề bản đồ", default: "Bản đồ quy hoạch" },
-			logoUrl: { type: "string", title: "Link Logo", format: "url" },
+			title: { type: "string", title: "Tiêu đề ", default: "Bản đồ quy hoạch" },
+			logoUrl: { type: "string", title: "LogoUrl", format: "url" },
 			zoom: { type: "integer", title: "Zoom", default: 13, minimum: 1, maximum: 20 },
 			center: {
 				type: "array", title: "Tọa độ trung tâm [Lat, Lng]", format: "table",
@@ -174,7 +175,7 @@
 					<form method="POST" action="?/create" use:enhance={submitHandler} id="configForm">
                         
                         <div class="mb-4 p-3 bg-light border rounded">
-                            <label class="form-label fw-bold text-dark">Mã định danh (KEY)</label>
+                            <label class="form-label fw-bold text-dark">KEY</label>
                             <input type="text" name="key" class="form-control form-control-lg" 
                                    placeholder="vd: hcm-map " required 
                                    value={form?.key || ''} pattern="[a-zA-Z0-9-_]+"

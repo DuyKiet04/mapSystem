@@ -3,14 +3,24 @@
 	import { enhance } from '$app/forms';
 	import type { ActionData, PageData, SubmitFunction } from './$types';
 
-   
 	export let data: PageData;
 	export let form: ActionData;
 
 	let editorContainer: HTMLElement;
 	let editorInstance: any;
-	let jsonString = JSON.stringify(data.config);
-	let jsonOutputText = JSON.stringify(data.config, null, 2);
+    let configData = { ...data.config };
+
+    
+    if (!configData.logoUrl) {
+        configData.logoUrl = "https://svelte.dev/favicon.png";
+    }
+
+    if (!configData.updatedAt) {
+        configData.updatedAt = "Chưa cập nhật";
+    }
+
+	let jsonString = JSON.stringify(configData);
+	let jsonOutputText = JSON.stringify(configData, null, 2);
     let showToast = false;
 	let toastTimeout: any;
 
@@ -20,7 +30,6 @@
 		toastTimeout = setTimeout(() => { showToast = false; }, 3000);
 	}
 
-	
 	let lineNumbers = "";
 	let textareaRef: HTMLTextAreaElement;
 	let lineNumbersRef: HTMLDivElement;
@@ -46,9 +55,25 @@
 		title: "Cấu Hình Bản Đồ",
 		type: "object",
 		properties: {
-			title: { type: "string", title: "Tiêu đề bản đồ", default: "Bản đồ quy hoạch" },
-			logoUrl: { type: "string", title: "Link Logo", format: "url" },
+            updatedAt: {
+                type: "string",
+                title: "UpdatedAt",
+                readonly: true, 
+                options: {
+                    input_attributes: {
+                        readonly: "readonly", 
+                        style: "background-color: #e9ecef; color: #495057; cursor: not-allowed;" 
+                    }
+                }
+            },
+
+			title: { type: "string", title: "Tiêu đề", default: "Bản đồ quy hoạch" },
 			zoom: { type: "integer", title: "Zoom", default: 13, minimum: 1, maximum: 20 },
+			logoUrl: { 
+                type: "string", 
+                title: "LogoUrl", 
+                format: "url" 
+            },
 			center: {
 				type: "array", title: "Tọa độ trung tâm [Lat, Lng]", format: "table",
 				items: { type: "number" }, minItems: 2, maxItems: 2, default: [10.7769, 106.7009]
@@ -97,11 +122,12 @@
 
 			editorInstance = new JSONEditor(editorContainer, {
 				schema: schema,
-				startval: data.config, 
+				startval: configData, // Dùng dữ liệu có updatedAt
 				theme: 'bootstrap5',
 				iconlib: 'fontawesome5',
 				disable_edit_json: true,
 				disable_properties: true,
+                no_additional_properties: true, 
 				disable_collapse: false,
 				object_layout: 'grid',
 				disable_array_delete_all_rows: true,
@@ -151,8 +177,8 @@
             <h2 class="text-primary m-0"><i class="fas fa-edit me-2"></i>Chỉnh Sửa</h2>
         </div>
 		<div>
-            <button type="submit" form="configForm" class="btn btn-primary btn-lg shadow">
-				<i class="fas fa-save me-2"></i> Lưu Chỉnh Sửa
+			<button type="submit" form="configForm" class="btn btn-primary btn-lg shadow">
+				<i class="fas fa-save me-2"></i> Lưu Thay Đổi
 			</button>
 		</div>
 	</div>
@@ -174,7 +200,7 @@
                         
                         <div class="mb-4 p-3 bg-light border rounded d-flex justify-content-between align-items-center">
                             <div>
-                                <label class="form-label fw-bold text-muted m-0">KEY :</label>
+                                <label class="form-label fw-bold text-muted m-0">KEY:</label>
                                 <span class="fw-bold text-dark fs-5 ms-2">{data.key}</span>
                             </div>
                             <span class="badge bg-secondary">Chỉ xem</span>
@@ -190,7 +216,7 @@
 		<div class="col-lg-6">
 			<div class="card shadow-sm h-100 border-primary">
 				<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-					<h5 class="mb-0"><i class="fas fa-code me-2"></i>JSON</h5>
+					<h5 class="mb-0"><i class="fas fa-code me-2"></i>JSON </h5>
 					<button class="btn btn-sm btn-light text-primary fw-bold" on:click={updateFormFromJSON}>
 						<i class="fas fa-sync-alt me-1"></i> Cập nhật
 					</button>
@@ -214,90 +240,18 @@
 </div>
 
 <style>
-	:global(body) {
-		background-color: #f0f2f5;
-		height: 100vh;
-		overflow-y: auto;
-	}
-	.scrollable-card {
-		max-height: calc(100vh - 150px);
-		overflow-y: auto;
-	}
-	.font-monospace {
-		font-family: 'Fira Code', 'Consolas', monospace;
-		font-size: 0.9rem;
-	}
-	.code-editor-wrapper {
-		display: flex;
-		height: 100%;
-		background-color: #fafafa;
-		font-family: 'Consolas', 'Monaco', monospace;
-		font-size: 14px;
-		line-height: 1.5;
-	}
-	.line-numbers {
-		min-width: 40px;
-		background-color: #eee;
-		color: #999;
-		text-align: right;
-		padding: 15px 10px;
-		border-right: 1px solid #ddd;
-		user-select: none;
-		white-space: pre-line;
-		overflow: hidden;
-	}
-	.code-textarea {
-		flex: 1;
-		border: none;
-		outline: none;
-		background-color: transparent;
-		padding: 15px;
-		resize: none;
-		white-space: pre;
-		color: #333;
-		overflow-y: auto;
-	}
-	:global(.card-header) {
-		display: flex !important;
-		justify-content: space-between !important;
-		align-items: center !important;
-		padding: 10px 15px;
-		background-color: #ffffff;
-		border-bottom: 1px solid #eee;
-	}
-	:global(.card-header .btn-group) {
-		margin-left: auto;
-	}
-	
-	:global(.btn-group-vertical) {
-		display: flex !important;
-		flex-direction: row !important;
-		gap: 20px !important;
-		width: 100% !important;
-		align-items: center;
-		margin-top: 15px;
-	}
-
-	:global(.btn-group-vertical > .btn) {
-		flex: 1;
-		width: auto !important;
-		border-radius: 5px !important;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		padding: 10px;
-	}
+	:global(body) { 
+		background-color: #f0f2f5; height: 100vh; overflow-y: auto; }
+	.scrollable-card { max-height: calc(100vh - 160px); overflow-y: auto; }
+	.font-monospace { font-family: 'Fira Code', 'Consolas', monospace; font-size: 0.9rem; }
+	.code-editor-wrapper { display: flex; height: 100%; background-color: #fafafa; font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.5; }
+	.line-numbers { min-width: 40px; background-color: #eee; color: #999; text-align: right; padding: 15px 10px; border-right: 1px solid #ddd; user-select: none; white-space: pre-line; overflow: hidden; }
+	.code-textarea { flex: 1; border: none; outline: none; background-color: transparent; padding: 15px; resize: none; white-space: pre; color: #333; overflow-y: auto; }
+	:global(.card-header) { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: #ffffff; border-bottom: 1px solid #eee; }
+	:global(.card-header .btn-group) { margin-left: auto; }
+	:global(.btn-group-vertical) { display: flex !important; flex-direction: row !important; gap: 20px !important; width: 100% !important; align-items: center; margin-top: 15px; }
+	:global(.btn-group-vertical > .btn) { flex: 1; width: auto !important; border-radius: 5px !important; display: flex; justify-content: center; align-items: center; padding: 10px; }
 	:global(.json-editor-btn-add) { margin-top: 5px; }
-	.toast-container {
-		position: fixed;
-		top: 20px;
-		right: 20px;
-		z-index: 9999;
-		min-width: 300px;
-		animation: slideInRight 0.5s ease-out;
-	}
-	@keyframes slideInRight {
-		from { transform: translateX(100%); opacity: 0; }
-		to { transform: translateX(0); opacity: 1; }
-	}
+	.toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideInRight 0.5s ease-out; }
+	@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 </style>
