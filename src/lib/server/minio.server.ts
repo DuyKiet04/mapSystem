@@ -3,7 +3,6 @@ import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command, Del
 import { env } from '$env/dynamic/private';
 
 const S3_BUCKET = env.S3_BUCKET;
-
 const s3Client = new S3Client({
     endpoint: env.S3_ENDPOINT,
     region: "us-east-1",
@@ -13,9 +12,6 @@ const s3Client = new S3Client({
     },
     forcePathStyle: true,
 });
-
-
-
 
 export async function listConfigs() {
     const command = new ListObjectsV2Command({
@@ -38,7 +34,6 @@ export async function listConfigs() {
     }
 }
 
-
 export async function getConfig(key: string) {
     try {
         const command = new GetObjectCommand({ Bucket: S3_BUCKET, Key: `configs/${key}.json` });
@@ -47,7 +42,6 @@ export async function getConfig(key: string) {
         return JSON.parse(str || "{}");
     } catch (e) { return null; }
 }
-
 
 export async function saveConfig(key: string, json: object) {
     const command = new PutObjectCommand({
@@ -58,8 +52,6 @@ export async function saveConfig(key: string, json: object) {
     });
     await s3Client.send(command);
 }
-
-
 
 export async function listThumbnails() {
     const command = new ListObjectsV2Command({
@@ -82,7 +74,6 @@ export async function listThumbnails() {
     }
 }
 
-
 export async function uploadThumbnail(filename: string, base64Data: string) {
    
     const buffer = Buffer.from(base64Data.replace(/^data:image\/\w+;base64,/, ""), 'base64');
@@ -96,9 +87,6 @@ export async function uploadThumbnail(filename: string, base64Data: string) {
     await s3Client.send(command);
     return `${env.S3_ENDPOINT}/${S3_BUCKET}/thumbnails/${filename}`;
 }
-
-
-
 
 export async function deleteFile(fullPath: string) {
     const command = new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: fullPath });
