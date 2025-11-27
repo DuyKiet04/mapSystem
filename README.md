@@ -13,17 +13,17 @@ Xây dựng hệ thống quản lý đa cấu hình bản đồ, cho phép tạo
   - `html2canvas`: Chụp ảnh màn hình.
   - `@aws-sdk/client-s3`: Kết nối MinIO/S3.
 - **Storage:** MinIO Playground (S3 Compatible).
-- **Deploy:** Netlify.
+- **Deploy:** render.
 
 ## Deadline dự kiến
 
 - Thời gian hoàn thành: 25/11/2025
 
-## Link Demo (Netlify)
+## Link Demo
 
-- **Trang cấu hình bản đồ:** [https://mapsystem.netlify.app/admin](https://mapsystem.netlify.app/admin)
-- **Quản lý thumbnail:** [https://mapsystem.netlify.app/admin/thumbnails](https://mapsystem.netlify.app/admin/thumbnails)
-- **API** [https://mapsystem.netlify.app/api/config/hcm](https://mapsystem.netlify.app/api/config/hcm)
+- **Trang cấu hình bản đồ:** [https://mapsystem.onrender.com/admin](https://mapsystem.onrender.com/admin)
+- **Quản lý thumbnail:** [https://mapsystem.onrender.com/admin/thumbnails](https://mapsystem.onrender.com/admin/thumbnails)
+- **API** [https://mapsystem.onrender.com/api/config/hcm](https://mapsystem.onrender.com/api/config/hcm)
 
 ---
 
@@ -34,7 +34,7 @@ Xây dựng hệ thống quản lý đa cấu hình bản đồ, cho phép tạo
 Clone repository và cài đặt dependencies:
 
 ```bash
-git clone [https://github.com/DuyKiet04/mapSystem.git]
+git clone https://github.com/DuyKiet04/mapSystem.git
 cd mapSystem
 npm install
 ```
