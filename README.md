@@ -34,6 +34,13 @@ Hệ thống cho phép upload và quản lý icon cho bản đồ.
 5.  Copy link icon ở danh sách bên phải.
 6.  Vào trang **Sửa bản đồ** -> Dán link vào ô **Icon URL** của các lớp dữ liệu.
 
+### Link demo
+
+- **Trang Quản Trị :** [https://mapsystem.onrender.com/admin](https://mapsystem.onrender.com/admin)
+- **Quản Lý Thumbnail:** [https://mapsystem.onrender.com/admin/thumbnails](https://mapsystem.onrender.com/admin/thumbnails)
+- **Trang Quản Lý Icon:** [https://mapsystem.onrender.com/admin/icons](https://mapsystem.onrender.com/admin/icons)
+- **API :** [https://mapsystem.onrender.com/api/config/hcm](https://mapsystem.onrender.com/api/config/hcm)
+
 ## Cách Cài Đặt và Chạy
 
 ### 1. Cài đặt
