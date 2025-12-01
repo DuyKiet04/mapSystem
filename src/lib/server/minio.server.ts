@@ -92,3 +92,36 @@ export async function deleteFile(fullPath: string) {
     const command = new DeleteObjectCommand({ Bucket: S3_BUCKET, Key: fullPath });
     await s3Client.send(command);
 }
+
+export async function listIcons() {
+    const command = new ListObjectsV2Command({
+        Bucket: S3_BUCKET,
+        Prefix: "icons/" 
+    });
+    try {
+        const response = await s3Client.send(command);
+        return (response.Contents || [])
+            .filter(f => f.Size && f.Size > 0) 
+            .map(f => ({
+                name: f.Key?.replace('icons/', ''), 
+                fullPath: f.Key, 
+                url: `${env.S3_ENDPOINT}/${S3_BUCKET}/${f.Key}`,
+                lastModified: f.LastModified
+            }));
+    } catch (error) {
+        console.error("Lỗi liệt kê icons:", error);
+        return [];
+    }
+}
+
+export async function uploadIcon(filename: string, buffer: Buffer) {
+    const command = new PutObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: `icons/${filename}`,
+        Body: buffer,
+        ContentType: "image/png", 
+        ACL: 'public-read' 
+    });
+    await s3Client.send(command);
+    return `${env.S3_ENDPOINT}/${S3_BUCKET}/icons/${filename}`;
+}

@@ -1,6 +1,6 @@
-# Bài 5: HỆ THỐNG QUẢN LÝ NHIỀU CẤU HÌNH BẢN ĐỒ & QUẢN LÝ THUMBNAIL
+# Bài 6: Quản Lý Icon
 
-Xây dựng hệ thống quản lý đa cấu hình bản đồ, cho phép tạo / sửa / xóa cấu hình bản đồ, quản lý thumbnail của bản đồ nền, và đảm bảo trang bản đồ (bài 1–3) có thể sử dụng cấu hình động từ API mới.
+Hệ thống cho phép upload và quản lý icon cho bản đồ.
 
 ## Công Nghệ Sử Dụng
 
@@ -17,15 +17,22 @@ Xây dựng hệ thống quản lý đa cấu hình bản đồ, cho phép tạo
 
 ## Deadline dự kiến
 
-- Thời gian hoàn thành: 25/11/2025
+- Thời gian hoàn thành: 4/12/2025
 
-## Link Demo
+### Chức năng:
 
-- **Trang cấu hình bản đồ:** [https://mapsystem.onrender.com/admin](https://mapsystem.onrender.com/admin)
-- **Quản lý thumbnail:** [https://mapsystem.onrender.com/admin/thumbnails](https://mapsystem.onrender.com/admin/thumbnails)
-- **API** [https://mapsystem.onrender.com/api/config/hcm](https://mapsystem.onrender.com/api/config/hcm)
+- **Resize ảnh Client-side:** Sử dụng thư viện **Pica** để giảm dung lượng và kích thước ảnh (mặc định 48x48px) ngay trên trình duyệt trước khi upload.
+- **Hỗ trợ đa nguồn:** Upload từ máy tính hoặc dán Link ảnh (URL).
+- **Lưu trữ:** Icon được lưu tại thư mục `icons/` trên MinIO.
 
----
+### Hướng dẫn sử dụng:
+
+1.  Truy cập Dashboard -> Bấm **"Quản lý Icon"**.
+2.  Chọn ảnh hoặc dán link ảnh gốc.
+3.  Chỉnh kích thước (Width/Height) nếu muốn.
+4.  Bấm **"Resize & Upload"**.
+5.  Copy link icon ở danh sách bên phải.
+6.  Vào trang **Sửa bản đồ** -> Dán link vào ô **Icon URL** của các lớp dữ liệu.
 
 ## Cách Cài Đặt và Chạy
 
@@ -45,7 +52,7 @@ Project này được cấu hình để chạy với MinIO Playground. Bạn c�
 
 ```ini
 # .env
-# API Endpoint (no port 9443)
+
 S3_ENDPOINT="https://play.min.io"
 
 S3_ACCESS_KEY="minioadmin"

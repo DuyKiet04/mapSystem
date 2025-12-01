@@ -80,7 +80,10 @@
     
     <div class="mt-4 text-center">
         <a href="/admin/thumbnails" class="btn btn-secondary">
-            <i class="fas fa-images me-2"></i> Quản lý Thumbnail
+            <i class="fas fa-images me-2"></i> Quản lý Thumbnails
+        </a>
+        <a href="/admin/icons" class="btn btn-info text-white">
+            <i class="fas fa-icons me-2"></i> Quản lý Icons
         </a>
     </div>
 </div>
