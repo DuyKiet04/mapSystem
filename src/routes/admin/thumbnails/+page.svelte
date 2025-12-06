@@ -13,6 +13,9 @@
     let inputName = "";
     let inputUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png";
     let imageData = ""; 
+    
+    // BIẾN QUAN TRỌNG: Quản lý trạng thái xoay
+    let isProcessing = false;
 
     onMount(async () => {
         const leafletModule = await import('leaflet');
@@ -50,31 +53,30 @@
             return;
         }
         
+        // 1. BẮT ĐẦU XOAY
+        isProcessing = true;
+        
         try {
-            const btn = document.activeElement as HTMLButtonElement;
-            const originalText = btn.innerText;
-            btn.innerText = "Đang chụp...";
-            btn.disabled = true;
+            // Chụp ảnh bằng html2canvas
             const canvas = await html2canvas(mapContainer, {
                 useCORS: true,       
                 allowTaint: false,   
-                logging: true,      
+                logging: false,      
                 backgroundColor: '#f0f0f0',
                 scale: 1
             });
+            
+            // Lấy dữ liệu ảnh
             imageData = canvas.toDataURL("image/jpeg", 0.8);
-            btn.innerText = originalText;
-            btn.disabled = false;
 
+            // Kích hoạt nút upload ẩn
             document.getElementById('uploadBtn')?.click();
+            
+            // LƯU Ý: Không tắt isProcessing ở đây, để hàm enhance bên dưới tắt
         } catch (error) {
             console.error("Lỗi chụp ảnh:", error);
-            alert("Lỗi chụp ảnh!!!!!!");
-            const btn = document.activeElement as HTMLButtonElement;
-            if(btn) {
-                btn.innerText = "Chụp";
-                btn.disabled = false;
-            }
+            alert("Lỗi chụp ảnh!");
+            isProcessing = false; // Lỗi thì tắt xoay ngay
         }
     }
 
@@ -82,6 +84,16 @@
         navigator.clipboard.writeText(text);
         alert("Đã copy link: " + text);
     }
+
+    // Hàm xử lý upload server (Custom Enhance)
+    const handleUpload = () => {
+        return async ({ update }) => {
+            // Chờ server xử lý xong
+            await update();
+            // 2. KẾT THÚC XOAY (Khi server đã trả về kết quả)
+            isProcessing = false;
+        };
+    };
 </script>
 
 <svelte:head>
@@ -99,7 +111,7 @@
     {#if form?.success}
         <div class="alert alert-success alert-dismissible fade show">
             <i class="fas fa-check-circle me-2"></i> {form.message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close" on:click={() => form = null}></button>
         </div>
     {/if}
 
@@ -130,12 +142,18 @@
                             <small>Kéo & Zoom để chọn góc chụp</small>
                         </div>
                     </div>
+                    
                     <div class=" w-100 d-flex justify-content-center align-items-center">
-                        <button class="btn btn-primary w-40 " on:click={captureMap}>
-                            <i class="fas fa-camera"></i> Chụp 
+                        <button class="btn btn-primary w-40" on:click={captureMap} disabled={isProcessing}>
+                            {#if isProcessing}
+                                <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                            {:else}
+                                <i class="fas fa-camera"></i> Chụp
+                            {/if}
                         </button>
                     </div>
-                    <form method="POST" action="?/upload" use:enhance class="d-none">
+
+                    <form method="POST" action="?/upload" use:enhance={handleUpload} class="d-none">
                         <input type="hidden" name="name" value={inputName}>
                         <input type="hidden" name="image" value={imageData}>
                         <button id="uploadBtn" type="submit"></button>
