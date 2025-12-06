@@ -13,8 +13,6 @@
     let inputName = "";
     let inputUrl = "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png";
     let imageData = ""; 
-    
-    // BIẾN QUAN TRỌNG: Quản lý trạng thái xoay
     let isProcessing = false;
 
     onMount(async () => {
@@ -53,7 +51,6 @@
             return;
         }
         
-        // 1. BẮT ĐẦU XOAY
         isProcessing = true;
         
         try {
@@ -68,15 +65,12 @@
             
             // Lấy dữ liệu ảnh
             imageData = canvas.toDataURL("image/jpeg", 0.8);
-
-            // Kích hoạt nút upload ẩn
             document.getElementById('uploadBtn')?.click();
             
-            // LƯU Ý: Không tắt isProcessing ở đây, để hàm enhance bên dưới tắt
         } catch (error) {
             console.error("Lỗi chụp ảnh:", error);
             alert("Lỗi chụp ảnh!");
-            isProcessing = false; // Lỗi thì tắt xoay ngay
+            isProcessing = false; 
         }
     }
 
@@ -85,12 +79,10 @@
         alert("Đã copy link: " + text);
     }
 
-    // Hàm xử lý upload server (Custom Enhance)
     const handleUpload = () => {
         return async ({ update }) => {
             // Chờ server xử lý xong
             await update();
-            // 2. KẾT THÚC XOAY (Khi server đã trả về kết quả)
             isProcessing = false;
         };
     };
