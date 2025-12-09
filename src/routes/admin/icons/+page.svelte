@@ -190,8 +190,8 @@
                                 {#each icons as icon}
                                     <tr>
                                         <td class="ps-4">
-                                            <div class="border rounded bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                                <img src={icon.url} alt="icon" width="48" height="48" style="object-fit: contain;">
+                                            <div class="p-1 border rounded bg-light d-inline-block">
+                                                <img src={icon.url} alt="icon" style="max-height: 80px; width: auto; display: block;">
                                             </div>
                                         </td>
                                         <td>
