@@ -14,57 +14,36 @@
     let previewSrc = ''; 
     let selectedFile: File | null = null;
     let isProcessing = false;
-    
-    // Tắt loading khi có kết quả 
-    $: if (form) { 
-        isProcessing = false; 
-    }
+    let blobToSend: Blob | null = null; 
+
+    $: if (form) { isProcessing = false; }
     $: if (form?.success) { 
         imageUrlInput = '';
         selectedFile = null;
+        previewSrc = '';
+        blobToSend = null;
     }
 
-    //  File 
-    function handleFileSelect(e: Event) {
-        const target = e.target as HTMLInputElement;
-        if (target.files && target.files[0]) {
-            selectedFile = target.files[0];
-        }
-    }
-
-    //  URL 
-    function handleUrlInput() {   
-    }
-
-    //  RESIZE 
-    async function processAndUpload() {
-        if (!selectedFile && !imageUrlInput) return alert("Vui lòng chọn hoặc nhập ảnh!");
-        isProcessing = true;
+    //  PREVIEW 
+    async function updateLivePreview() {
+        if (uploadMode === 'file' && !selectedFile) return;
+        if (uploadMode === 'url' && !imageUrlInput) return;
 
         try {
             const picaModule = await import('pica'); 
             const pica = picaModule.default || picaModule; 
-
             let imgSourceUrl = '';
-            let originalFilename = '';
-
             if (uploadMode === 'file' && selectedFile) {
                 imgSourceUrl = URL.createObjectURL(selectedFile);
-                originalFilename = selectedFile.name;
             } else if (uploadMode === 'url' && imageUrlInput) {
-                // GỌI PROXY
                 imgSourceUrl = `/api/proxy?url=${encodeURIComponent(imageUrlInput)}`;
-                originalFilename = new URL(imageUrlInput).pathname.split('/').pop() || 'icon-url';
-            } else {
-                isProcessing = false;
-                return;
             }
-            
+
             const img = new Image();
             img.crossOrigin = "Anonymous";
             await new Promise((resolve, reject) => {
                 img.onload = resolve;
-                img.onerror = () => reject("Không tải được ảnh gốc (có thể do chặn CORS/URL sai)");
+                img.onerror = () => reject("Không tải được ảnh từ URL này");
                 img.src = imgSourceUrl;
             });
 
@@ -72,49 +51,74 @@
             fromCanvas.width = img.width;
             fromCanvas.height = img.height;
             const ctx = fromCanvas.getContext('2d');
-            if (!ctx) throw new Error("Lỗi Canvas");
+            if (!ctx) return;
             ctx.drawImage(img, 0, 0);
-
             const toCanvas = document.createElement('canvas');
             toCanvas.width = width;  
             toCanvas.height = height;
-
             const picaResizer = pica();
             await picaResizer.resize(fromCanvas, toCanvas, { unsharpAmount: 80, unsharpRadius: 0.6 });
-
             const blob = await picaResizer.toBlob(toCanvas, 'image/png', 0.90);
-            if (!blob) throw new Error("Lỗi tạo blob pica");
-
-            //  filename + timestamp
-            let finalName = '';
-            if (uploadMode === 'file') {
-            const nameWithoutExt = originalFilename.substring(0, originalFilename.lastIndexOf('.')) || originalFilename;
-            finalName = `${nameWithoutExt}.png`;
-            } else {
-            const nameWithoutExt = originalFilename.split('.').slice(0, -1).join('.') || 'icon-url';
-            finalName = `${nameWithoutExt}-${Date.now()}.png`;
-            }
-            
+            blobToSend = blob; 
             previewSrc = URL.createObjectURL(blob); 
-            const fileToSend = new File([blob], finalName, { type: 'image/png' });
-            
-            const dt = new DataTransfer();
-            dt.items.add(fileToSend);
-            
-            const hiddenInput = document.getElementById('hidden-upload') as HTMLInputElement;
-            const hiddenFilename = document.getElementById('hidden-filename') as HTMLInputElement;
-            
-            hiddenInput.files = dt.files;
-            hiddenFilename.value = finalName; 
-            
-            document.getElementById('real-submit-btn')?.click();
 
         } catch (error) {
-            console.error(error);
-            alert("Lỗi xử lý ảnh: " + error);
-            isProcessing = false;
+            console.error("Lỗi Preview:", error);
         }
     }
+
+    function handleFileSelect(e: Event) {
+        const target = e.target as HTMLInputElement;
+        if (target.files && target.files[0]) {
+            selectedFile = target.files[0];
+            updateLivePreview(); 
+        }
+    }
+    
+    function handleSizeChange() {
+        if (previewSrc) updateLivePreview();
+    }
+
+    //   UPLOAD 
+    async function handleUploadClick() {
+        // Nếu chưa có blob (do chưa preview), thử tạo lại lần cuối
+        if (!blobToSend) {
+            await updateLivePreview();
+            if (!blobToSend) return alert("Vui lòng chọn ảnh hợp lệ hoặc kiểm tra URL!");
+        }
+        isProcessing = true;
+        let finalName = '';
+
+        // TIMESTAMP 
+        if (uploadMode === 'file' && selectedFile) {
+            const originalName = selectedFile.name;
+            const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+            finalName = `${nameWithoutExt}-${Date.now()}.png`;
+            
+        } else {
+            let tempName = 'icon-url';
+            try {
+                const urlObj = new URL(imageUrlInput);
+                tempName = urlObj.pathname.split('/').pop() || 'icon-url';
+                if (imageUrlInput.includes('gstatic.com') || tempName === 'images' || tempName.length < 3) {
+                    tempName = 'google-image';
+                }
+            } catch (e) {}
+            tempName = tempName.replace(/[^a-zA-Z0-9._-]/g, '_');
+            const cleanName = tempName.replace(/\.[^/.]+$/, "") || "icon";
+            finalName = `${cleanName}-${Date.now()}.png`;
+        }
+        const fileToSend = new File([blobToSend], finalName, { type: 'image/png' });
+        const dt = new DataTransfer();
+        dt.items.add(fileToSend);
+
+        const hiddenInput = document.getElementById('hidden-upload') as HTMLInputElement;
+        const hiddenFilename = document.getElementById('hidden-filename') as HTMLInputElement;
+        hiddenInput.files = dt.files;
+        hiddenFilename.value = finalName;
+        document.getElementById('real-submit-btn')?.click();
+    }
+
     function copyLink(url: string) { 
         navigator.clipboard.writeText(url); 
         alert("Đã copy link ảnh!"); 
@@ -129,13 +133,13 @@
 
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="text-primary fw-bold"><i class="fas fa-icons me-2"></i>Quản Lý Icon </h2>
-        <a href="/admin" class="btn btn-outline-secondary"> <i class="fas fa-arrow-left"></i> </a>
+        <h2 class="text-primary fw-bold"><i class="fas fa-icons me-2"></i>Quản Lý Icon</h2>
+        <a href="/admin" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i></a>
     </div>
 
     {#if form?.success}
         <div class="alert alert-success alert-dismissible fade show position-fixed top-0 end-0 m-3 shadow" style="z-index: 9999;">
-            <i class="fas fa-check-circle me-2"></i> {form.message || 'Upload icon thành công!'}
+            <i class="fas fa-check-circle me-2"></i> {form.message || 'Upload thành công!'}
             <button type="button" class="btn-close" on:click={() => form = null}></button>
         </div>
     {/if}
@@ -156,27 +160,35 @@
                         <input type="file" class="form-control mb-3" accept="image/*" on:change={handleFileSelect}>
                     {:else}
                         <input type="text" class="form-control mb-3" placeholder="Dán link ảnh..." 
-                            bind:value={imageUrlInput} on:change={handleUrlInput}>
+                            bind:value={imageUrlInput} 
+                            on:change={updateLivePreview} 
+                            on:blur={updateLivePreview}
+                            on:keydown={(e) => e.key === 'Enter' && updateLivePreview()}>
                     {/if}
 
                     <div class="d-flex gap-2 mb-3">
-                        <div class="w-50"><label class="small fw-bold">Rộng</label><input type="number" class="form-control" bind:value={width}></div>
-                        <div class="w-50"><label class="small fw-bold">Cao</label><input type="number" class="form-control" bind:value={height}></div>
+                        <div class="w-50"><label class="small fw-bold">Rộng</label>
+                            <input type="number" class="form-control" bind:value={width} on:change={handleSizeChange}>
+                        </div>
+                        <div class="w-50"><label class="small fw-bold">Cao</label>
+                            <input type="number" class="form-control" bind:value={height} on:change={handleSizeChange}>
+                        </div>
                     </div>
 
-                    <div class="text-center bg-light p-3 rounded mb-3 border d-flex align-items-center justify-content-center" style="min-height: 100px;">
+                    <div class="text-center bg-light p-3 rounded mb-3 border d-flex flex-column align-items-center justify-content-center" style="min-height: 120px;">
                         {#if previewSrc}
-                            <img src={previewSrc} alt="Preview Icon (48x48)" style="max-height: 80px;" class="shadow-sm bg-white border">
+                            <img src={previewSrc} alt="Preview" class="shadow-sm bg-white border mb-2">
+                            <small class="text-success fw-bold"><i class="fas fa-check"></i> Đã Resize ({width}x{height})</small>
                         {:else}
-                            <span class="text-muted small"></span>
+                            <span class="text-muted small btn ">Click vào đây để xem ảnh Preview</span>
                         {/if}
                     </div>
 
-                    <button class="btn btn-primary w-100" on:click={processAndUpload} disabled={isProcessing || (uploadMode === 'file' && !selectedFile && !imageUrlInput)}>
+                    <button class="btn btn-primary w-100" on:click={handleUploadClick} disabled={isProcessing || (uploadMode === 'file' && !selectedFile && !imageUrlInput)}>
                         {#if isProcessing}
-                            <i class="fas fa-spinner fa-spin"></i> Đang Resize & Upload...
+                            <i class="fas fa-spinner fa-spin"></i> Đang Upload...
                         {:else}
-                            <i class="fas fa-save"></i> Lưu Icon 
+                            <i class="fas fa-save"></i> Lưu Icon
                         {/if}
                     </button>
 
@@ -197,7 +209,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4">Icon</th>
-                                <th>Tên Icon </th>
+                                <th>Tên Icon</th>
                                 <th class="text-end pe-4">Thao tác</th>
                             </tr>
                         </thead>
@@ -209,7 +221,7 @@
                                     <tr>
                                         <td class="ps-4">
                                             <div class="p-1 border rounded bg-light d-inline-block">
-                                                <img src={icon.url} alt="icon" style="max-height: 50px; width: auto; display: block;">
+                                                <img src={icon.url} alt="icon" style="max-height: 50px; width: auto;">
                                             </div>
                                         </td>
                                         <td>
