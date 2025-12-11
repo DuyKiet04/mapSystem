@@ -54,7 +54,6 @@
         isProcessing = true;
         
         try {
-            // Chụp ảnh bằng html2canvas
             const canvas = await html2canvas(mapContainer, {
                 useCORS: true,       
                 allowTaint: false,   
@@ -63,7 +62,6 @@
                 scale: 1
             });
             
-            // Lấy dữ liệu ảnh
             imageData = canvas.toDataURL("image/jpeg", 0.8);
             document.getElementById('uploadBtn')?.click();
             
@@ -81,7 +79,6 @@
 
     const handleUpload = () => {
         return async ({ update }) => {
-            // Chờ server xử lý xong
             await update();
             isProcessing = false;
         };

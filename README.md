@@ -12,13 +12,13 @@ Hệ thống cho phép upload và quản lý icon cho bản đồ.
 - **`pica`**: Resize ảnh chất lượng cao ngay trên trình duyệt để tối ưu dung lượng trước khi upload .
 - **`html2canvas`**: Chụp ảnh màn hình bản đồ làm Thumbnail.
 - **Backend & Storage:**
-- **`@aws-sdk/client-s3`**: Kết nối lưu trữ chuẩn S3 (MinIO, Supabase Storage).
+- **`@aws-sdk/client-s3`**: Kết nối lưu trữ chuẩn S3 (MinIo Storage).
 - **API Proxy**: Xử lý trung gian giúp tải ảnh từ URL bên ngoài tránh lỗi CORS.
 - **Deploy:** Render .
 
 ## Deadline dự kiến
 
-- Thời gian hoàn thành: 4/12/2025
+- Thời gian hoàn thành: 11/12/2025
 
 ### Chức năng:
 
@@ -61,11 +61,11 @@ Project này được cấu hình để chạy với MinIO Playground. Bạn c�
 ```ini
 # .env
 
-S3_ENDPOINT="https://qtnzydtwtnyptuexqqff.storage.supabase.co/storage/v1/s3"
-S3_ACCESS_KEY="cb94c69198619c8538f37380ae371af0"
-S3_SECRET_KEY="bd71ee882646604e940160d56be12f43c368240613a4b25659283a2369028cb3"
+S3_ENDPOINT="https://play.min.io"
+S3_ACCESS_KEY="minioadmin"
+S3_SECRET_KEY="minioadmin"
 S3_BUCKET="kiet-map-system"
-S3_REGION="ap-southeast-1"
+S3_REGION="us-east-1"
 
 ```
 
