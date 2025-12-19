@@ -1,8 +1,10 @@
 import { fail, redirect } from '@sveltejs/kit';
-import { listThumbnails, uploadThumbnail, deleteFile } from '$lib/server/minio.server';
+import { listThumbnails, uploadThumbnail, deleteFile, setPublicBucket } from '$lib/server/minio.server';
+
 
 export const load = async () => {
     try {
+        await setPublicBucket();
         const thumbnails = await listThumbnails(); 
         return { thumbnails };
     } catch (e) {

@@ -1,6 +1,14 @@
-import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { 
+    S3Client, 
+    PutObjectCommand, 
+    ListObjectsV2Command, 
+    DeleteObjectCommand, 
+    GetObjectCommand,
+    PutBucketPolicyCommand 
+} from "@aws-sdk/client-s3";
 import { env } from '$env/dynamic/private';
-//  CẤU HÌNH 
+
+// --- CẤU HÌNH ---
 const S3_BUCKET = env.S3_BUCKET;
 const PUBLIC_VIEW_URL = `${env.S3_ENDPOINT}/${S3_BUCKET}`;
 
@@ -15,7 +23,7 @@ const s3Client = new S3Client({
     requestHandler: { timeout: 30000 }
 });
 
-//  ICONS 
+// --- ICONS ---
 export async function listIcons() {
     try {
         const command = new ListObjectsV2Command({ Bucket: S3_BUCKET, Prefix: "icons/" });
@@ -52,9 +60,7 @@ export async function uploadIcon(filename: string, buffer: Buffer) {
     }
 }
 
-
-//  API
-
+// --- API CONFIGS ---
 export async function getConfig(key: string) {
     try {
         const fullKey = `configs/${key}.json`;
@@ -68,7 +74,6 @@ export async function getConfig(key: string) {
     }
 }
 
-//  lưu  khi  chỉnh sửa JSON
 export async function saveConfig(key: string, data: any) {
     try {
         const fullKey = `configs/${key}.json`;
@@ -105,7 +110,7 @@ export async function listConfigs() {
     }
 }
 
-// THUMBNAILS
+// --- THUMBNAILS ---
 export async function listThumbnails() { 
     try {
         const command = new ListObjectsV2Command({ Bucket: S3_BUCKET, Prefix: "thumbnails/" });
@@ -136,8 +141,7 @@ export async function uploadThumbnail(filename: string, buffer: Buffer) {
     return `${PUBLIC_VIEW_URL}/${key}`;
 }
 
-// PROXY 
-
+// --- PROXY ---
 export async function getUrlData(targetUrl: string) {
     try {
         const response = await fetch(targetUrl, {
@@ -159,5 +163,36 @@ export async function deleteFile(fullPath: string) {
     } catch (error) {
         console.error("Lỗi xóa file:", error);
         throw error;
+    }
+}
+
+// TỰ ĐỘNG MỞ KHÓA BUCKET 
+export async function setPublicBucket() {
+    try {
+        console.log(`⏳ Đang cấu hình Public cho Bucket: ${S3_BUCKET}...`);
+        //CHÍNH SÁCH CHO TẤT CẢ XEM ĐC 
+        const policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "PublicReadGetObject",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": ["s3:GetObject"],
+                    "Resource": [`arn:aws:s3:::${S3_BUCKET}/*`]
+                }
+            ]
+        };
+
+        await s3Client.send(new PutBucketPolicyCommand({
+            Bucket: S3_BUCKET,
+            Policy: JSON.stringify(policy)
+        }));
+
+        console.log(" THÀNH CÔNG!");
+        return true;
+    } catch (error) {
+        console.error(" LỖI RỒI BẠN!!):", error);
+        return false;
     }
 }
