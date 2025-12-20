@@ -23,24 +23,37 @@ export const actions = {
             return fail(400, { message: 'Thiếu tên hoặc dữ liệu ảnh.' });
         }
         
-        const base64Data = imageData.replace(/^data:image\/jpeg;base64,/, "");
-        const buffer = Buffer.from(base64Data, 'base64');
-        
-        const filename = `${name.replace(/\s/g, '-')}-${Date.now()}.jpg`;
-
         try {
-            //  MinIO/S3
-            const uploadedUrl = await uploadThumbnail(filename, buffer);
+            const base64Parts = imageData.split(';base64,');
+            const base64Data = base64Parts.pop();
+            if (!base64Data) throw new Error("Dữ liệu ảnh không hợp lệ");
+            
+            const buffer = Buffer.from(base64Data, 'base64');
+            const filename = `${name.replace(/\s/g, '-')}-${Date.now()}.jpg`;
+
+            // Gọi hàm upload
+            const uploadedUrl = await uploadThumbnail(name, buffer);
 
             return { 
                 success: true, 
                 message: `Tạo Thumbnail "${name}" thành công!`,
                 url: uploadedUrl
             };
-        } catch (error) {
-            console.error("Upload Thumbnail Error:", error);
-            return fail(500, { message: 'Lỗi server khi upload Thumbnail.' });
+        } catch (error: any) {
+            console.error("--- LỖI UPLOAD CHI TIẾT ---");
+    
+    if (error.$response && error.$response.body) {
+        try {
+            const reader = error.$response.body;
+            console.log("Mã lỗi HTTP:", error.$metadata?.httpStatusCode);
+        } catch (e) {
+            console.log("Không thể đọc nội dung lỗi từ server.");
         }
+    }
+    
+    return fail(500, { message: 'Server MinIO từ chối nhận file. Có thể do dung lượng ảnh vệ tinh quá lớn.' });
+}
+        
     },
 
     //  xóa Thumbnail

@@ -37,7 +37,8 @@
             try {
                 tileLayer = L.tileLayer(inputUrl, {
                     maxZoom: 19,
-                    crossOrigin: 'anonymous'
+                    crossOrigin: true,
+                    detectRetina: true
                 }).addTo(mapInstance);
             } catch (e) {
                 alert("URL bản đồ không hợp lệ!");
@@ -59,10 +60,10 @@
                 allowTaint: false,   
                 logging: false,      
                 backgroundColor: '#f0f0f0',
-                scale: 1
+                scale: 0.8
             });
             
-            imageData = canvas.toDataURL("image/jpeg", 0.8);
+            imageData = canvas.toDataURL("image/jpeg", 0.3);
             document.getElementById('uploadBtn')?.click();
             
         } catch (error) {
@@ -125,7 +126,7 @@
                     </div>
 
                     <label class="form-label fw-bold">Xem & Chụp:</label>
-                    <div class="map-preview-container border rounded mb-3" style="height: 250px; position: relative;">
+                    <div class="map-preview-container border rounded mb-3" style="height: 250px ; width: 400px ; margin: 0 auto; position: relative;">
                         <div bind:this={mapContainer} style="width: 100%; height: 100%;"></div>
                         <div class="position-absolute top-50 start-50 translate-middle text-white bg-dark bg-opacity-50 px-3 py-1 rounded pointer-events-none" style="z-index: 1000; pointer-events: none;">
                             <small>Kéo & Zoom để chọn góc chụp</small>
@@ -205,4 +206,3 @@
         </div>
     </div>
 </div>
-

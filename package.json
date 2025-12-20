@@ -27,6 +27,7 @@
 		"@aws-sdk/lib-storage": "^3.948.0",
 		"@json-editor/json-editor": "^2.15.2",
 		"@types/pica": "^9.0.5",
+		"dom-to-image-more": "^3.7.2",
 		"html2canvas": "^1.4.1",
 		"leaflet": "^1.9.4",
 		"pica": "^9.0.1"

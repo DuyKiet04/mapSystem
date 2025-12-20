@@ -1,3 +1,4 @@
+import { uploadThumbnail } from '$lib/server/minio.server';
 import { 
     S3Client, 
     PutObjectCommand, 
@@ -20,7 +21,7 @@ const s3Client = new S3Client({
         secretAccessKey: env.S3_SECRET_KEY,
     },
     forcePathStyle: true,
-    requestHandler: { timeout: 30000 }
+    
 });
 
 // --- ICONS ---
@@ -129,16 +130,37 @@ export async function listThumbnails() {
     }
 }
 
-export async function uploadThumbnail(filename: string, buffer: Buffer) {
-    const key = `thumbnails/${filename}`;
-    await s3Client.send(new PutObjectCommand({
+function slugify(text: string) {
+    return text
+        .toString()
+        .normalize('NFD') // Tách dấu
+        .replace(/[\u0300-\u036f]/g, '') // Xóa dấu
+        .toLowerCase()
+        .replace(/\s+/g, '-') // Thay khoảng trắng bằng -
+        .replace(/[^\w\-]+/g, '') // Xóa kí tự đặc biệt
+        .replace(/\-\-+/g, '-') // Xóa dấu - trùng lặp
+        .trim();
+}
+
+export async function uploadThumbnail(displayName: string, buffer: Buffer) {
+    const cleanName = slugify(displayName); // Làm sạch tên
+    const finalFilename = `${cleanName}-${Date.now()}.jpg`;
+    const key = `thumbnails/${finalFilename}`;
+    console.log(`--- Đang upload Thumbnail: ${finalFilename} ---`);
+    try{
+        await s3Client.send(new PutObjectCommand({
         Bucket: S3_BUCKET,
         Key: key,
         Body: buffer,
         ContentType: "image/jpeg",
-        ACL: 'public-read'
+        // ACL: 'public-read'
     }));
     return `${PUBLIC_VIEW_URL}/${key}`;
+    } catch (error) {
+        console.error("Lỗi tại uploadThumbnail: " , error);
+        throw error;
+    }
+    
 }
 
 // --- PROXY ---
@@ -169,7 +191,7 @@ export async function deleteFile(fullPath: string) {
 // TỰ ĐỘNG MỞ KHÓA BUCKET 
 export async function setPublicBucket() {
     try {
-        console.log(`⏳ Đang cấu hình Public cho Bucket: ${S3_BUCKET}...`);
+        console.log(` Đang cấu hình Public cho Bucket: ${S3_BUCKET}...`);
         //CHÍNH SÁCH CHO TẤT CẢ XEM ĐC 
         const policy = {
             "Version": "2012-10-17",
