@@ -1,4 +1,3 @@
-import { uploadThumbnail } from '$lib/server/minio.server';
 import { 
     S3Client, 
     PutObjectCommand, 
@@ -21,8 +20,20 @@ const s3Client = new S3Client({
         secretAccessKey: env.S3_SECRET_KEY,
     },
     forcePathStyle: true,
-    
 });
+
+//  LÀM SẠCH TÊN FILE
+function slugify(text: string) {
+    return text
+        .toString()
+        .normalize('NFD') 
+        .replace(/[\u0300-\u036f]/g, '') // Xóa dấu 
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-') // Khoảng trắng thành gạch ngang
+        .replace(/[^\w\-]+/g, '') // Xóa ký tự đặc biệt
+        .replace(/\-\-+/g, '-'); // Xóa gạch ngang trùng lặp
+}
 
 // --- ICONS ---
 export async function listIcons() {
@@ -44,15 +55,16 @@ export async function listIcons() {
 }
 
 export async function uploadIcon(filename: string, buffer: Buffer) {
-    const key = `icons/${filename}`;
-    console.log(`--- Đang upload Icon: ${filename} ---`);
+    const cleanName = slugify(filename.replace('.png', ''));
+    const key = `icons/${cleanName}-${Date.now()}.png`;
+    
     try {
         await s3Client.send(new PutObjectCommand({
             Bucket: S3_BUCKET,
             Key: key,
             Body: buffer,
             ContentType: "image/png",
-            ACL: 'public-read'
+            // ACL: 'public-read' 
         }));
         return `${PUBLIC_VIEW_URL}/${key}`;
     } catch (e) {
@@ -83,8 +95,7 @@ export async function saveConfig(key: string, data: any) {
             Bucket: S3_BUCKET,
             Key: fullKey,
             Body: buffer,
-            ContentType: "application/json",
-            ACL: 'public-read'
+            ContentType: "application/json"
         }));
         return true;
     } catch (error) {
@@ -130,44 +141,32 @@ export async function listThumbnails() {
     }
 }
 
-function slugify(text: string) {
-    return text
-        .toString()
-        .normalize('NFD') // Tách dấu
-        .replace(/[\u0300-\u036f]/g, '') // Xóa dấu
-        .toLowerCase()
-        .replace(/\s+/g, '-') // Thay khoảng trắng bằng -
-        .replace(/[^\w\-]+/g, '') // Xóa kí tự đặc biệt
-        .replace(/\-\-+/g, '-') // Xóa dấu - trùng lặp
-        .trim();
-}
-
 export async function uploadThumbnail(displayName: string, buffer: Buffer) {
-    const cleanName = slugify(displayName); // Làm sạch tên
+    const cleanName = slugify(displayName); 
     const finalFilename = `${cleanName}-${Date.now()}.jpg`;
     const key = `thumbnails/${finalFilename}`;
+
     console.log(`--- Đang upload Thumbnail: ${finalFilename} ---`);
-    try{
+    
+    try {
         await s3Client.send(new PutObjectCommand({
-        Bucket: S3_BUCKET,
-        Key: key,
-        Body: buffer,
-        ContentType: "image/jpeg",
-        // ACL: 'public-read'
-    }));
-    return `${PUBLIC_VIEW_URL}/${key}`;
+            Bucket: S3_BUCKET,
+            Key: key,
+            Body: buffer,
+            ContentType: "image/jpeg"
+        }));
+        return `${PUBLIC_VIEW_URL}/${key}`;
     } catch (error) {
-        console.error("Lỗi tại uploadThumbnail: " , error);
+        console.error("Lỗi tại uploadThumbnail: ", error);
         throw error;
     }
-    
 }
 
-// --- PROXY ---
+// --- PROXY & DELETE ---
 export async function getUrlData(targetUrl: string) {
     try {
         const response = await fetch(targetUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
         if (!response.ok) throw new Error('Không tải được ảnh từ URL gốc.');
         const arrayBuffer = await response.arrayBuffer();
@@ -188,11 +187,10 @@ export async function deleteFile(fullPath: string) {
     }
 }
 
-// TỰ ĐỘNG MỞ KHÓA BUCKET 
+// --- TỰ ĐỘNG MỞ KHÓA BUCKET ---
 export async function setPublicBucket() {
     try {
         console.log(` Đang cấu hình Public cho Bucket: ${S3_BUCKET}...`);
-        //CHÍNH SÁCH CHO TẤT CẢ XEM ĐC 
         const policy = {
             "Version": "2012-10-17",
             "Statement": [
@@ -211,10 +209,10 @@ export async function setPublicBucket() {
             Policy: JSON.stringify(policy)
         }));
 
-        console.log(" THÀNH CÔNG!");
+        console.log(" CẤU HÌNH BUCKET THÀNH CÔNG!");
         return true;
     } catch (error) {
-        console.error(" LỖI RỒI BẠN!!):", error);
+        console.error(" LỖI CẤU HÌNH BUCKET:", error);
         return false;
     }
 }
